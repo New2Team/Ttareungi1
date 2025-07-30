@@ -1,5 +1,8 @@
+
 import 'dart:convert';
 import 'package:bicycle_sungdong/components/menu_text_button.dart';
+import 'package:bicycle_sungdong/components/menupanel.dart';
+import 'package:bicycle_sungdong/view/post_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
@@ -15,6 +18,20 @@ class SungdongBikeMap extends StatefulWidget {
 }
 
 class _SungdongBikeMapState extends State<SungdongBikeMap> {
+  int selectedMenuIdx = 0; // 현재 메뉴 선택 인덱스
+
+  void handleMenuSelected(int idx) {
+    setState(() {
+      selectedMenuIdx = idx;
+      Navigator.of(context).pop(); // Drawer 닫기
+    });
+    if (idx == 0) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => GesigleBoardPage()),
+    );
+  }
+  }
+
   final MapController _mapController = MapController();
   final PopupController _popupController = PopupController();
 
@@ -62,76 +79,83 @@ class _SungdongBikeMapState extends State<SungdongBikeMap> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // 👇 Drawer에 MenuPanel 연결
+      drawer: MenuPanel(
+        selectedIndex: selectedMenuIdx,
+        onMenuSelected: handleMenuSelected,
+      ),
       appBar: AppBar(
+        // 👇 Builder로 context 감싸기
         leading: ResponsiveVisibility(
           hiddenConditions: [
-            Condition.largerThan(value: false, name: TABLET)
+            Condition.largerThan(value: false, name: TABLET),
           ],
-        child: IconButton(onPressed: () {
-            
-          }, icon: Icon(Icons.menu))),
+          child: Builder(
+            builder: (context) => IconButton(
+              icon: Icon(Icons.menu),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+          ),
+        ),
         title: Text("성동구 따릉이 대여소 현황"),
-          actions: [
+        actions: [
           ResponsiveVisibility(
             hiddenConditions: [
-              Condition.largerThan(value: true,name: MOBILE)
+              Condition.smallerThan(name: DESKTOP),
             ],
-            child: ManuTextButton(text: 'Course'),
-            
-            ),
-            
+            child: ManuTextButton(text: '공지사항'),
+          ),
         ],
-      
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children:[ 
+        children: [
           Center(
             child: SizedBox(
               width: 450,
               height: 600,
               child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: LatLng(37.5610, 127.0386),
-                initialZoom: 13,
-                onTap: (_, __) => _popupController.hideAllPopups(),
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.app',
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: LatLng(37.5610, 127.0386),
+                  initialZoom: 13,
+                  onTap: (_, __) => _popupController.hideAllPopups(),
                 ),
-                PopupMarkerLayer(
-                  options: PopupMarkerLayerOptions(
-                    markers: _markers,
-                    popupController: _popupController,
-                    popupDisplayOptions: PopupDisplayOptions(
-                      builder: (BuildContext context, Marker marker) {
-                        final bike = marker as BikeMarker;
-                        return Card(
-                          child: Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(bike.name,
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold, fontSize: 14)),
-                                Text("대여 가능: ${bike.bikes}대"),
-                              ],
+                children: [
+                  TileLayer(
+                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.example.app',
+                  ),
+                  PopupMarkerLayer(
+                    options: PopupMarkerLayerOptions(
+                      markers: _markers,
+                      popupController: _popupController,
+                      popupDisplayOptions: PopupDisplayOptions(
+                        builder: (BuildContext context, Marker marker) {
+                          final bike = marker as BikeMarker;
+                          return Card(
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(bike.name,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold, fontSize: 14)),
+                                  Text("대여 가능: ${bike.bikes}대"),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
-                )
-              ],
-                      ),
+                ],
+              ),
             ),
           ),
-        ]
+        ],
       ),
     );
   }
