@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'package:bicycle_sungdong/components/menu_text_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
+import 'package:responsive_framework/responsive_framework.dart';
 
 class SungdongBikeMap extends StatefulWidget {
   const SungdongBikeMap({super.key});
@@ -60,7 +62,27 @@ class _SungdongBikeMapState extends State<SungdongBikeMap> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("성동구 따릉이 대여소 현황")),
+      appBar: AppBar(
+        leading: ResponsiveVisibility(
+          hiddenConditions: [
+            Condition.largerThan(value: false, name: TABLET)
+          ],
+        child: IconButton(onPressed: () {
+            
+          }, icon: Icon(Icons.menu))),
+        title: Text("성동구 따릉이 대여소 현황"),
+          actions: [
+          ResponsiveVisibility(
+            hiddenConditions: [
+              Condition.largerThan(value: true,name: MOBILE)
+            ],
+            child: ManuTextButton(text: 'Course'),
+            
+            ),
+            
+        ],
+      
+      ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children:[ 
