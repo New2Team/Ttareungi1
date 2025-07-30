@@ -48,9 +48,10 @@ def get_sungdong_bikes():
         return {"error": str(e)}
     
 
+
 @app.get("/weather/seoul")
 def get_weather():
-    url = f"http://openapi.seoul.go.kr:8088/785551435a726c613131314569565551/json/citydata/1/1000"
+    url = f"http://openapi.seoul.go.kr:8088/{SEOUL_API_KEY}/json/citydata/1/1000"
     response = requests.get(url)
 
     if response.status_code != 200:
@@ -62,6 +63,38 @@ def get_weather():
         return weather
     except Exception as e:
         return {"error": f"데이터 파싱 실패: {e}"}
+
+
+ACCU_API_KEY = "AustkL2DOMXwzLWyBZwZVSykz6JRx9TS"  # 발급받은 키 입력
+SEOUL_LOCATION_KEY = "226081"
+
+@app.get("/weather/seoul/12hour")
+def get_12hour_forecast():
+    url = f"http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/{SEOUL_LOCATION_KEY}"
+    params = {
+        "apikey": ACCU_API_KEY,
+        "language": "ko-kr",
+        "metric": "true"
+    }
+    response = requests.get(url, params=params)
+
+    if response.status_code != 200:
+        return {"error": f"AccuWeather API 호출 실패: {response.status_code}"}
+
+    try:
+        data = response.json()
+        result = []
+        for hour in data:
+            result.append({
+                "시간": hour["DateTime"],
+                "기온(℃)": hour["Temperature"]["Value"],
+                "날씨": hour["IconPhrase"],
+                "강수확률(%)": hour["PrecipitationProbability"]
+            })
+        return result
+
+    except Exception as e:
+        return {"error": f"AccuWeather 데이터 파싱 실패: {e}"}
 
 
 
