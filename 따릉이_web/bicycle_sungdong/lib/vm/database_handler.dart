@@ -61,4 +61,17 @@ class GesigleRepository {
             .map((doc) => Gesigle.fromMap(doc.data() as Map<String, dynamic>))
             .toList());
   }
+Future<List<Gesigle>> fetchRecentNotices({int limitCount = 5}) async {
+  final snapshot = await gesigleCollection
+      .orderBy('datetime', descending: true)
+      .limit(limitCount)
+      .get();
+
+  return snapshot.docs
+      .map((doc) => Gesigle.fromMap(doc.data() as Map<String, dynamic>))
+      .toList();
 }
+
+
+}
+

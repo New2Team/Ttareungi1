@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class GesigleBoardPage extends StatefulWidget {
-  const GesigleBoardPage({Key? key}) : super(key: key);
+  const GesigleBoardPage({super.key});
 
   @override
   State<GesigleBoardPage> createState() => _GesigleBoardPageState();
@@ -27,19 +27,18 @@ class _GesigleBoardPageState extends State<GesigleBoardPage> {
     fetchAllPosts();
   }
 
-Future<void> fetchAllPosts() async {
-  final res = await repository.fetchGesiglePageWithCursor();
-  setState(() {
-    allPosts = res['posts'];      // 게시글 리스트
-    lastDoc = res['lastDoc'];     // 다음 페이지 커서 (필요시)
-    currentPage = 1;
-  });
-}
-
+  Future<void> fetchAllPosts() async {
+    final res = await repository.fetchGesiglePageWithCursor();
+    setState(() {
+      allPosts = res['posts'];
+      lastDoc = res['lastDoc'];
+      currentPage = 1;
+    });
+  }
 
   void handleRowTap(Gesigle post) {
-  Get.to(() => GesigleDetailPage(post: post));
-}
+    Get.to(() => GesigleDetailPage(post: post));
+  }
 
   void goPrev() {
     if (currentPage > 1) setState(() => currentPage--);
@@ -52,32 +51,72 @@ Future<void> fetchAllPosts() async {
 
   @override
   Widget build(BuildContext context) {
-    // 페이지별 데이터
     final totalPages = (allPosts.length / pageSize).ceil();
     final start = (currentPage - 1) * pageSize;
     final end = (start + pageSize < allPosts.length) ? start + pageSize : allPosts.length;
     final pagePosts = allPosts.sublist(start, end);
 
     return Scaffold(
-      appBar: AppBar(title: Text('게시판')),
-      body: Column(
-        children: [
-          Expanded(
-            child: BoardTable(
-              posts: pagePosts,
-              onRowTap: handleRowTap,
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        title: const Text(
+          '공지사항',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        centerTitle: false,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0.5,
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 📋 게시판 테이블
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[300]!),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        )
+                      ],
+                    ),
+                    child: BoardTable(
+                      posts: pagePosts,
+                      onRowTap: handleRowTap,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // 📄 페이지 컨트롤
+                Align(
+                  alignment: Alignment.center,
+                  child: BoardPageControls(
+                    currentPage: currentPage,
+                    totalItems: allPosts.length,
+                    pageSize: pageSize,
+                    onPrev: goPrev,
+                    onNext: goNext,
+                    isFirst: currentPage == 1,
+                    isLast: currentPage == totalPages,
+                  ),
+                ),
+              ],
             ),
           ),
-          BoardPageControls(
-                currentPage: currentPage,
-                totalItems: allPosts.length,    // 전체 게시글 수
-                pageSize: pageSize,             // 한 페이지당 글 수
-                onPrev: goPrev,
-                onNext: goNext,
-                isFirst: currentPage == 1,
-                isLast: currentPage == totalPages,
-              ),
-        ],
+        ),
       ),
     );
   }
