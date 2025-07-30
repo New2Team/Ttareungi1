@@ -1,9 +1,11 @@
 import 'package:bicycle_sungdong/components/postTable.dart';
 import 'package:bicycle_sungdong/components/postpagecontrols.dart';
 import 'package:bicycle_sungdong/model/gesigle.dart';
+import 'package:bicycle_sungdong/view/post_detail.dart';
 import 'package:bicycle_sungdong/vm/database_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class GesigleBoardPage extends StatefulWidget {
   const GesigleBoardPage({Key? key}) : super(key: key);
@@ -36,9 +38,8 @@ Future<void> fetchAllPosts() async {
 
 
   void handleRowTap(Gesigle post) {
-    // 상세페이지 이동 등
-    print('클릭: ${post.title}');
-  }
+  Get.to(() => GesigleDetailPage(post: post));
+}
 
   void goPrev() {
     if (currentPage > 1) setState(() => currentPage--);

@@ -13,6 +13,7 @@ class BoardTable extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,  // overflow 방지
       child: DataTable(
+        showCheckboxColumn: false, 
         columns: const [
           DataColumn(label: Text("순서")),
           DataColumn(label: Text("제목")),
