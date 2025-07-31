@@ -14,7 +14,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 API_KEY = "785551435a726c613131314569565551"
 
 # 성동구 대여소 ID 로드
@@ -48,48 +47,41 @@ def get_sungdong_bikes():
         return {"error": str(e)}
     
 
-
-@app.get("/weather/seoul")
-def get_weather():
-    url = f"http://openapi.seoul.go.kr:8088/{SEOUL_API_KEY}/json/citydata/1/1000"
-    response = requests.get(url)
-
-    if response.status_code != 200:
-        return {"error": f"API 호출 실패: {response.status_code}"}
-
-    try:
-        data = response.json()
-        weather = data["SeoulRtd.citydata"]["WEATHER_STTS"]
-        return weather
-    except Exception as e:
-        return {"error": f"데이터 파싱 실패: {e}"}
-
-
 ACCU_API_KEY = "AustkL2DOMXwzLWyBZwZVSykz6JRx9TS"  # 발급받은 키 입력
 SEOUL_LOCATION_KEY = "226081"
 
 @app.get("/weather/seoul/12hour")
 def get_12hour_forecast():
-    url = f"http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/{SEOUL_LOCATION_KEY}"
+    url = f"http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/{SEOUL_LOCATION_KEY}?apikey={ACCU_API_KEY}&metric=true&details=true"
     params = {
         "apikey": ACCU_API_KEY,
         "language": "ko-kr",
-        "metric": "true"
+        "metric": "true",
+        "detail" : "true"
     }
-    response = requests.get(url, params=params)
+    response = requests.get(url)
 
     if response.status_code != 200:
         return {"error": f"AccuWeather API 호출 실패: {response.status_code}"}
 
     try:
         data = response.json()
+        print(data)
         result = []
         for hour in data:
+            temperature = hour["Temperature"]["Value"]
+            humidity = hour["RelativeHumidity"]
+            
+            # 불쾌지수만 추가
+            discomfort_index = 0.81 * temperature + 0.01 * humidity * (0.99 * temperature - 14.3) + 46.3
+
             result.append({
                 "시간": hour["DateTime"],
-                "기온(℃)": hour["Temperature"]["Value"],
+                "기온(℃)": temperature,
                 "날씨": hour["IconPhrase"],
-                "강수확률(%)": hour["PrecipitationProbability"]
+                "강수확률(%)": hour["PrecipitationProbability"],
+                "상대습도(%)": humidity,
+                "불쾌지수": round(discomfort_index, 2)
             })
         return result
 

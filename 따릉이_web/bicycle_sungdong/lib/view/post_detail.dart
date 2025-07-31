@@ -27,7 +27,7 @@ class GesigleDetailPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 🟥 제목
+                // 제목
                 Text(
                   post.title,
                   style: const TextStyle(
@@ -38,7 +38,7 @@ class GesigleDetailPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // 📆 날짜
+                // 날짜
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text(
@@ -48,7 +48,7 @@ class GesigleDetailPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
 
-                // 🟨 본문
+                // 본문
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
