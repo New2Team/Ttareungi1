@@ -15,8 +15,8 @@ class BoardPageControls extends StatelessWidget {
     required this.onNext,
     this.isFirst = false,
     this.isLast = false,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -172,7 +172,10 @@ class _SungdongBikeMapState extends State<SungdongBikeMap> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         title: Text(bike.name),
-                        content: Text("대여 가능: ${bike.bikes}대"),
+                        content: SizedBox(
+                          width: 260,       // ← 너비 고정
+                          height: 80, 
+                          child: Text("대여 가능: ${bike.bikes}대")),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(),

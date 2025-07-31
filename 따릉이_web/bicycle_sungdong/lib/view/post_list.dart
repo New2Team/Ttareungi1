@@ -76,7 +76,7 @@ class _GesigleBoardPageState extends State<GesigleBoardPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 📋 게시판 테이블
+                // 게시판 테이블
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(24),
@@ -100,7 +100,7 @@ class _GesigleBoardPageState extends State<GesigleBoardPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // 📄 페이지 컨트롤
+                // 페이지 컨트롤
                 Align(
                   alignment: Alignment.center,
                   child: BoardPageControls(
