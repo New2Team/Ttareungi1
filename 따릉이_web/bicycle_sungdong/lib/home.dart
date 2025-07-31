@@ -1,15 +1,12 @@
-
 import 'dart:convert';
 import 'package:bicycle_sungdong/components/menupanel.dart';
 import 'package:bicycle_sungdong/view/post_list.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'package:responsive_framework/responsive_framework.dart';
-
 
 class SungdongBikeMap extends StatefulWidget {
   const SungdongBikeMap({super.key});
@@ -20,7 +17,6 @@ class SungdongBikeMap extends StatefulWidget {
 
 class _SungdongBikeMapState extends State<SungdongBikeMap> {
   final MapController _mapController = MapController();
-  final PopupController _popupController = PopupController();
   List<BikeMarker> _markers = [];
 
   @override
@@ -45,11 +41,7 @@ class _SungdongBikeMapState extends State<SungdongBikeMap> {
 
         if (lat != null && lng != null) {
           loadedMarkers.add(
-            BikeMarker(
-              LatLng(lat, lng),
-              name: name,
-              bikes: bikes,
-            ),
+            BikeMarker(LatLng(lat, lng), name: name, bikes: bikes),
           );
         }
       }
@@ -69,177 +61,205 @@ class _SungdongBikeMapState extends State<SungdongBikeMap> {
         selectedIndex: 0,
         onMenuSelected: (int idx) {
           if (idx == 0) {
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => GesigleBoardPage()));
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => GesigleBoardPage()));
           }
         },
       ),
       appBar: AppBar(
-        title: const Text("성동구 따릉이 대여소 현황"),
-        backgroundColor: Colors.green[700],
+        titleSpacing: 16,
+        backgroundColor: Colors.green.shade800, 
+        elevation: 2,
         leading: ResponsiveVisibility(
-          hiddenConditions: [
-          Condition.largerThan(value: false, name: TABLET)],
+          hiddenConditions: [Condition.largerThan(name: TABLET)],
           child: Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            ),
+            builder:
+                (context) => IconButton(
+                  icon: Icon(Icons.menu_rounded, size: 28, color: Colors.white),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
           ),
+        ),
+        title: Row(
+          children: [
+            SizedBox(width: 10),
+            Text(
+              "성동구 따릉이 대여소 현황",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         actions: [
           ResponsiveVisibility(
             hiddenConditions: [Condition.smallerThan(name: DESKTOP)],
-            child: TextButton(
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => GesigleBoardPage()));
-              },
-              child: const Text('공지사항', style: TextStyle(color: Colors.white)),
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: TextButton.icon(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.green.shade600,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => GesigleBoardPage()));
+                },
+                icon: Icon(Icons.campaign, color: Colors.white),
+                label: Text(
+                  '공지사항',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
             ),
           ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: isWide
-            ? Row(
-                children: [
-                  // 🟩 지도 영역
-                  Expanded(
-                    flex: 7,
-                    child: buildMap(),
-                  ),
-                  const VerticalDivider(width: 32),
-                  // 🟦 게시판 영역
-                  Expanded(
-                    flex: 3,
-                    child: buildBoardPreview(),
-                  ),
-                ],
-              )
-            : Center(child: buildMap()),
+        padding: EdgeInsets.all(16.0),
+        child:
+            isWide
+                ? Row(
+                  children: [
+                    // 🟩 지도 영역
+                    Expanded(flex: 7, child: buildMap()),
+                    VerticalDivider(width: 32),
+                    // 🟦 게시판 영역
+                    Expanded(flex: 3, child: buildBoardPreview()),
+                  ],
+                )
+                : Center(child: buildMap()),
       ),
     );
   }
 
   // 지도 빌드 함수
   Widget buildMap() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: FlutterMap(
-        mapController: _mapController,
-        options: MapOptions(
-          initialCenter: LatLng(37.5610, 127.0386),
-          initialZoom: 13,
-          onTap: (_, __) => _popupController.hideAllPopups(),
+  return ClipRRect(
+    borderRadius: BorderRadius.circular(16),
+    child: FlutterMap(
+      mapController: _mapController,
+      options: MapOptions(
+        initialCenter: LatLng(37.5610, 127.0386),
+        initialZoom: 13,
+        onTap: (_, __) {},
+      ),
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.example.app',
         ),
-        children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: 'com.example.app',
-          ),
-          PopupMarkerLayer(
-            options: PopupMarkerLayerOptions(
-              markers: _markers,
-              popupController: _popupController,
-              popupDisplayOptions: PopupDisplayOptions(
-                builder: (BuildContext context, Marker marker) {
-                  final bike = marker as BikeMarker;
-                  return Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    elevation: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            bike.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+        MarkerLayer(
+          markers: _markers.map((bike) {
+            return Marker(
+              width: 40,
+              height: 40,
+              point: bike.point,
+              child:  GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        title: Text(bike.name),
+                        content: Text("대여 가능: ${bike.bikes}대"),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: Text("닫기"),
                           ),
-                          Text("대여 가능: ${bike.bikes}대"),
                         ],
-                      ),
-                    ),
+                      );
+                    },
+                  );
+                },
+                child: Icon(Icons.pedal_bike, color: Colors.green, size: 30),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    ),
+  );
+}
+  
+  }
+
+  //공지사항
+  Widget buildBoardPreview() {
+    return FutureBuilder<QuerySnapshot>(
+      future:
+          FirebaseFirestore.instance
+              .collection('gesigle')
+              .orderBy('datetime', descending: true)
+              .limit(5)
+              .get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Padding(
+            padding: EdgeInsets.all(16),
+            child: Text("공지사항이 없습니다."),
+          );
+        }
+
+        final notices =
+            snapshot.data!.docs.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              return data['title'] ?? '제목 없음';
+            }).toList();
+
+        return Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "최신 공지사항",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: notices.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: Text("・ ${notices[index]}"),
                   );
                 },
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
-Widget buildBoardPreview() {
-  return FutureBuilder<QuerySnapshot>(
-    future: FirebaseFirestore.instance
-        .collection('gesigle')
-        .orderBy('datetime', descending: true)
-        .limit(5)
-        .get(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
-      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-        return const Padding(
-          padding: EdgeInsets.all(16),
-          child: Text("공지사항이 없습니다."),
-        );
-      }
-
-      final notices = snapshot.data!.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        return data['title'] ?? '제목 없음';
-      }).toList();
-
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8)],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "최신 공지사항",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: notices.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Text("・ ${notices[index]}"),
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
-}
 
 // 커스텀 마커
-class BikeMarker extends Marker {
+class BikeMarker {
+  final LatLng point;
   final String name;
   final String bikes;
 
-  const BikeMarker(
-    LatLng point, {
-    required this.name,
-    required this.bikes,
-  }) : super(
-          point: point,
-          width: 40,
-          height: 40,
-          child: const Icon(Icons.pedal_bike, color: Colors.green, size: 30),
-        );
+  BikeMarker(this.point, {required this.name, required this.bikes});
 }
