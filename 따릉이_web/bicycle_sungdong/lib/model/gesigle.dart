@@ -5,6 +5,8 @@ class Gesigle {
   final String content; // 내용 
   final String datetime; // 가게 이름
 
+  
+
   Gesigle({
     this.id,
     required this.title,
