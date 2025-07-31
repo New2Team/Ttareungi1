@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:bicycle_sungdong/components/menupanel.dart';
+import 'package:bicycle_sungdong/model/gesigle.dart';
+import 'package:bicycle_sungdong/view/post_detail.dart';
 import 'package:bicycle_sungdong/view/post_list.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -38,10 +40,11 @@ class _SungdongBikeMapState extends State<SungdongBikeMap> {
         final lng = double.tryParse(station["stationLongitude"]);
         final name = station["stationName"];
         final bikes = station["parkingBikeTotCnt"];
+        final stationID = station['stationId'];
 
         if (lat != null && lng != null) {
           loadedMarkers.add(
-            BikeMarker(LatLng(lat, lng), name: name, bikes: bikes),
+            BikeMarker(LatLng(lat, lng), name: name, bikes: bikes, id: stationID),
           );
         }
       }
@@ -98,7 +101,7 @@ class _SungdongBikeMapState extends State<SungdongBikeMap> {
           ResponsiveVisibility(
             hiddenConditions: [Condition.smallerThan(name: DESKTOP)],
             child: Padding(
-              padding: const EdgeInsets.only(right: 16.0),
+              padding: EdgeInsets.only(right: 16.0),
               child: TextButton.icon(
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -167,21 +170,40 @@ class _SungdongBikeMapState extends State<SungdongBikeMap> {
                   showDialog(
                     context: context,
                     builder: (context) {
-                      return AlertDialog(
+                      return Dialog(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        title: Text(bike.name),
-                        content: SizedBox(
-                          width: 260,       // ← 너비 고정
-                          height: 80, 
-                          child: Text("대여 가능: ${bike.bikes}대")),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: Text("닫기"),
+                        child: Container(
+                          width: 300,   
+                          height: 160,  
+                          padding: EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                bike.name,
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                "대여 가능: ${bike.bikes}대",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              Text(
+                                "1시간 후 대여 예상 대여가능: 5대",
+                                style: TextStyle(fontSize: 16,color: Colors.red),
+                              ),
+                              Align(
+                                alignment: Alignment.bottomRight,
+                                child: TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: Text("닫기"),
+                                ),
+                              )
+                            ],
                           ),
-                        ],
+                        ),
                       );
                     },
                   );
@@ -219,11 +241,16 @@ class _SungdongBikeMapState extends State<SungdongBikeMap> {
           );
         }
 
-        final notices =
-            snapshot.data!.docs.map((doc) {
-              final data = doc.data() as Map<String, dynamic>;
-              return data['title'] ?? '제목 없음';
-            }).toList();
+        // final notices =
+        //     snapshot.data!.docs.map((doc) {
+        //       final data = doc.data() as Map<String, dynamic>;
+        //       return data['title'] ?? '제목 없음';
+        //     }).toList();
+
+        final notices = snapshot.data!.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return Gesigle.fromMap(data);
+        }).toList();
 
         return Container(
           padding: EdgeInsets.all(16),
@@ -245,11 +272,19 @@ class _SungdongBikeMapState extends State<SungdongBikeMap> {
                 physics: NeverScrollableScrollPhysics(),
                 itemCount: notices.length,
                 itemBuilder: (context, index) {
-                  return Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4),
-                    child: Text("・ ${notices[index]}"),
-                  );
-                },
+                final post = notices[index];
+                return Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4),
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => GesigleDetailPage(post: post)),
+                      );
+                    },
+                    child: Text("・ ${post.title}"),
+                  ),
+                );
+              }
               ),
             ],
           ),
@@ -263,6 +298,7 @@ class BikeMarker {
   final LatLng point;
   final String name;
   final String bikes;
+  final String id;
 
-  BikeMarker(this.point, {required this.name, required this.bikes});
+  BikeMarker(this.point, {required this.name, required this.bikes, required this.id});
 }
